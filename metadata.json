@@ -1,0 +1,6 @@
+{
+  "name": "FlowFinance",
+  "description": "Quản lý chi tiêu cá nhân thông minh tích hợp trợ lý AI giúp kiểm soát dòng tiền tốt hơn.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
