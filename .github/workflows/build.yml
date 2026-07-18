@@ -23,20 +23,14 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Hack and Inject KSP Configuration Directly into Code
-      run: |
-        # 1. Ép cứng vào tất cả các file gradle.properties có trong dự án
-        find . -name "gradle.properties" -exec sh -c 'echo "\nksp.incremental=false\nksp.run.in.process=false" >> "{}"' \;
-        
-        # 2. Truy tìm các file build.gradle(.kts) ở thư mục app để cấu hình trực tiếp block ksp nếu có
-        find . -name "build.gradle.kts" -exec sh -c 'echo "\nksp {\n  arg(\"ksp.incremental\", \"false\")\n  arg(\"ksp.run.in.process\", \"false\")\n}" >> "{}"' \;
-        find . -name "build.gradle" -exec sh -c 'echo "\nksp {\n  arg(\"ksp.incremental\", \"false\")\n  arg(\"ksp.run.in.process\", \"false\")\n}" >> "{}"' \;
-
     - name: Clean and Build with Gradle
-      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace -Dksp.incremental=false -Dorg.gradle.jvmargs="-Dksp.run.in.process=false"
+      env:
+        GRADLE_OPTS: "-Dksp.incremental=false -Dksp.run.in.process=false -Dorg.gradle.jvmargs='-Dksp.run.in.process=false'"
+      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
+        
