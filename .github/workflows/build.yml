@@ -1,50 +1,39 @@
-name: Android Build
+name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ] # Hoặc branch chính của bạn
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
         distribution: 'temurin'
-        
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+        java-version: '17'
 
-    - name: Force Disable KSP Daemon & Incremental
-      run: |
-        # Cách 1: Ghi đè vào cấu hình toàn cục của máy chủ
-        mkdir -p ~/.gradle
-        echo "ksp.incremental=false" >> ~/.gradle/gradle.properties
-        echo "ksp.run.in.process=false" >> ~/.gradle/gradle.properties
-        
-        # Cách 2: Ép trực tiếp vào file gradle.properties của chính dự án
-        if [ -f "gradle.properties" ]; then
-          echo "" >> gradle.properties
-          echo "ksp.incremental=false" >> gradle.properties
-          echo "ksp.run.in.process=false" >> gradle.properties
-        else
-          echo -e "ksp.incremental=false\nksp.run.in.process=false" > gradle.properties
-        fi
+    # Sử dụng cache để không phải tải lại các thư viện Gradle ở các lần build sau
+    - name: Setup Gradle Cache
+      uses: gradle/actions/setup-gradle@v3
 
-    - name: Clean and Build with Gradle
-      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace -Dksp.incremental=false -Dorg.gradle.jvmargs="-Dksp.run.in.process=false"
-      
-    - name: Upload APK
+    - name: Grant Execute Permission to Gradlew
+      run: chmod +x gradlew
+
+    # Lệnh build APK tối ưu nhất (Debug APK phục vụ cài đặt thử nghiệm ngay)
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --no-daemon --build-cache
+
+    # Lưu trữ file APK sau khi build để tải xuống trực tiếp từ GitHub
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
+        name: FlowFinance-Debug-APK
         path: app/build/outputs/apk/debug/app-debug.apk
-        
