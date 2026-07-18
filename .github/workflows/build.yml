@@ -23,24 +23,25 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Configure Hardened Gradle Properties
+    - name: Force Disable KSP Daemon & Incremental
       run: |
+        # Cách 1: Ghi đè vào cấu hình toàn cục của máy chủ
         mkdir -p ~/.gradle
-        echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
-        echo "org.gradle.configureondemand=false" >> ~/.gradle/gradle.properties
         echo "ksp.incremental=false" >> ~/.gradle/gradle.properties
         echo "ksp.run.in.process=false" >> ~/.gradle/gradle.properties
-        echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=768m -Dksp.run.in.process=false" >> ~/.gradle/gradle.properties
+        
+        # Cách 2: Ép trực tiếp vào file gradle.properties của chính dự án
+        if [ -f "gradle.properties" ]; then
+          echo "" >> gradle.properties
+          echo "ksp.incremental=false" >> gradle.properties
+          echo "ksp.run.in.process=false" >> gradle.properties
+        else
+          echo -e "ksp.incremental=false\nksp.run.in.process=false" > gradle.properties
+        fi
 
     - name: Clean and Build with Gradle
-      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace
+      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace -Dksp.incremental=false -Dorg.gradle.jvmargs="-Dksp.run.in.process=false"
       
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
