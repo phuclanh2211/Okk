@@ -23,8 +23,17 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Build with Gradle
-      run: gradle assembleDebug --no-daemon --stacktrace -Dksp.incremental=false -Dorg.gradle.jvmargs="-Dksp.run.in.process=false"
+    - name: Configure Hardened Gradle Properties
+      run: |
+        mkdir -p ~/.gradle
+        echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+        echo "org.gradle.configureondemand=false" >> ~/.gradle/gradle.properties
+        echo "ksp.incremental=false" >> ~/.gradle/gradle.properties
+        echo "ksp.run.in.process=false" >> ~/.gradle/gradle.properties
+        echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m -Dksp.run.in.process=false" >> ~/.gradle/gradle.properties
+
+    - name: Clean and Build with Gradle
+      run: gradle clean assembleDebug --no-daemon --no-configuration-cache --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
